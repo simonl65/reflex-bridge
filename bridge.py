@@ -3,11 +3,13 @@
 uinput joystick that Heli-X (or anything else reading /dev/input/jsN or
 evdev) can see.
 
-Report layout (8 bytes), reverse-engineered in notes.md:
-  byte0            rudder/yaw    (0-255)
-  byte1            elevator/pitch (0-255)
-  byte2            aileron/roll  (0-255)
-  byte3:byte4      throttle, big-endian 16-bit
+Report layout (8 bytes), reverse-engineered in notes.md. Each main axis is
+a 10-bit value split into an 8-bit "fine" byte plus a 2-bit "coarse"
+counter packed into byte3:
+  byte0            rudder/yaw fine byte;    coarse = byte3 bits[7:6] (x64)
+  byte1            elevator/pitch fine byte; coarse = byte3 bits[3:2] (x4)
+  byte2            aileron/roll fine byte;   coarse = byte3 bits[1:0] (x1)
+  byte4            throttle fine byte;       coarse = byte3 bits[5:4] (x16)
   byte5/byte6      multiplexed aux pair, selected by byte7's high nibble:
                      0x80/0xa0/0xb0 -> byte5 = CH6 pitch curve (tied to
                        throttle, not independently useful for a sim)
@@ -39,10 +41,10 @@ AXIS_AUX_CH7 = ecodes.ABS_RY
 
 CAPABILITIES = {
     ecodes.EV_ABS: [
-        (AXIS_ROLL, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
-        (AXIS_PITCH, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
-        (AXIS_YAW, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
-        (AXIS_THROTTLE, AbsInfo(value=0, min=0, max=65535, fuzz=0, flat=0, resolution=0)),
+        (AXIS_ROLL, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+        (AXIS_PITCH, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+        (AXIS_YAW, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+        (AXIS_THROTTLE, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
         (AXIS_AUX_PITCH_CURVE, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
         (AXIS_AUX_CH7, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
     ]
@@ -59,10 +61,11 @@ def find_device():
 
 
 def decode(report, state):
-    state[AXIS_ROLL] = report[2]
-    state[AXIS_PITCH] = report[1]
-    state[AXIS_YAW] = report[0]
-    state[AXIS_THROTTLE] = (report[3] << 8) | report[4]
+    coarse = report[3]
+    state[AXIS_YAW] = ((coarse >> 6) & 0x3) << 8 | report[0]
+    state[AXIS_THROTTLE] = ((coarse >> 4) & 0x3) << 8 | report[4]
+    state[AXIS_PITCH] = ((coarse >> 2) & 0x3) << 8 | report[1]
+    state[AXIS_ROLL] = (coarse & 0x3) << 8 | report[2]
 
     slot = report[7] & 0xF0
     if slot in (0x80, 0xA0, 0xB0):

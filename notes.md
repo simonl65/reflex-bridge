@@ -45,7 +45,12 @@ matching idle1 exactly. Throttle/rudder gimbal-coupling theory confirmed —
 mapping is correct, the yaw-test anomaly was expected physical coupling,
 not a protocol misunderstanding.
 
-## Main channel summary (confirmed)
+## Main channel summary — SUPERSEDED, see "10-bit coarse+fine encoding" below
+
+The single-byte mapping below turned out to be wrong: each main axis is
+actually a 10-bit value (fine byte + a 2-bit coarse counter packed into
+byte3), not a plain 0-255 byte. Discovered when live-testing in Heli-X
+showed wrapping/sawtooth behavior on every axis. Kept here for history.
 
 | Channel        | Byte(s)                 | Idle                   | Full deflection                    |
 | -------------- | ----------------------- | ---------------------- | ---------------------------------- |
@@ -53,6 +58,36 @@ not a protocol misunderstanding.
 | Elevator/Pitch | byte1                   | ~0x0a-0x0c             | ~0x72-0x75                         |
 | Aileron/Roll   | byte2                   | ~0x0d-0x0f             | ~0xa6-0xa9                         |
 | Throttle       | byte3:byte4 (BE 16-bit) | ~0xba,0x96-99 (~47767) | ~0x8a,0x74-78 (~35446), decreasing |
+
+## 10-bit coarse+fine encoding (CORRECT mapping)
+
+Continuous full-range sweeps (not just static endpoint samples) revealed
+each main axis's "fine" byte is a sawtooth that wraps through 0-255
+multiple times across one physical stick throw — a 2-bit "coarse" counter
+elsewhere increments/decrements by a fixed step each time the fine byte
+wraps. All four coarse counters are packed into **byte3**:
+
+| Axis     | Fine byte | Coarse bits in byte3 | Coarse step (weight) |
+| -------- | --------- | --------------------- | --------------------- |
+| Rudder   | byte0     | bits[7:6]              | 64                    |
+| Throttle | byte4     | bits[5:4]              | 16                    |
+| Elevator | byte1     | bits[3:2]              | 4                     |
+| Aileron  | byte2     | bits[1:0]              | 1                     |
+
+Combined 10-bit value per axis: `(coarse_2bit << 8) | fine_byte`, range
+0-1023. E.g. rudder = `((byte3 >> 6) & 0x3) << 8 | byte0`.
+
+Confirmed via continuous ~10s sweeps for all 4 axes: elevator
+(`capture_elevator_sweep.bin`), throttle (`capture_throttle_sweep.bin`),
+rudder (`capture_rudder_sweep.bin`), aileron (`capture_aileron_sweep.bin`)
+— in each, only that axis's fine byte swept 0-255 with multiple wraps,
+and only its assigned 2-bit field in byte3 changed, by exactly the
+predicted weight, while the other three fields in byte3 stayed constant.
+
+This also means the earlier "throttle = byte3:byte4 combined 16-bit"
+theory was a coincidence — byte3's throttle-correlated changes were real,
+but the correct combination is `(bits[5:4]<<8)|byte4`, not a straight
+16-bit big-endian pair.
 
 ## Transmitter: Futaba T9CP, helicopter mode
 
