@@ -44,7 +44,7 @@ CAPABILITIES = {
         (AXIS_ROLL, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
         (AXIS_PITCH, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
         (AXIS_YAW, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
-        (AXIS_THROTTLE, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
+        (AXIS_THROTTLE, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
         (AXIS_AUX_PITCH_CURVE, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
         (AXIS_AUX_CH7, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
     ]
@@ -63,7 +63,7 @@ def find_device():
 def decode(report, state):
     coarse = report[3]
     state[AXIS_YAW] = ((coarse >> 6) & 0x3) << 8 | report[0]
-    state[AXIS_THROTTLE] = ((coarse >> 4) & 0x3) << 8 | report[4]
+    state[AXIS_THROTTLE] = (((coarse >> 4) & 0x3) << 8 | report[4]) >> 2
     state[AXIS_PITCH] = ((coarse >> 2) & 0x3) << 8 | report[1]
     state[AXIS_ROLL] = (coarse & 0x3) << 8 | report[2]
 
