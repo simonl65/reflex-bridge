@@ -22,6 +22,11 @@ decreasing as throttle increases:
 Bytes 0-2 are NOT throttle (stayed in idle jitter cluster 0x09-0x0f across
 all three throttle tests) — likely other analog channels at rest.
 
+Aileron/Roll = **byte2**, single byte, ~0-255 range: idle/center ~0x0d-0x0f
+(13-15), full-right ~0xa6-0xa9 (166-169). Increases moving right.
+(byte1 showed a minor shift too during this test, 0x0a-0x0c -> 0x0c-0x0f —
+inconclusive, needs a dedicated pitch/yaw test to confirm if it's crosstalk.)
+
 ## Byte mapping
 
 | Channel | Byte offset | Width | Bit range | Idle/center | Min | Max | Notes |
