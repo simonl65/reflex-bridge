@@ -103,3 +103,24 @@ Verification (read-only):
 ls -la /dev/uinput /dev/hidraw6
 ```
 → Both now `crw-rw---- root plugdev`. Permissions fully in place, no root needed for the bridge going forward.
+
+## Protocol reverse-engineering (interactive, read-only hardware access)
+
+Fixed a bug in `sniff.py`'s HID report-descriptor ioctl (`fcntl.ioctl` "string arg too long" — Python's ioctl helper has a ~1024-byte immutable-buffer limit; fixed by sizing the descriptor buffer to the actual reported size and using a mutable `bytearray`). Report descriptor itself still isn't readable (`Errno 22 Invalid argument`) — not blocking, raw report reads work fine without it.
+
+Wrote `capture.py` — captures N seconds of raw reports, saves to `capture_<label>.bin`, prints per-byte min/max/unique-value stats. Used repeatedly as: `uv run capture.py <label> <seconds>`, reading `/dev/hidraw6` directly (default path in the script).
+
+Session sequence (each preceded by asking the user to position a specific control and confirm "ready"):
+1. `capture_idle1` — hands off, throttle low (baseline)
+2. `capture_throttle_high` — throttle full up
+3. `capture_throttle_mid` — throttle mid
+4. `capture_roll_right` — aileron/roll full right
+5. `capture_pitch_fwd` — elevator/pitch full forward
+6. `capture_yaw_side` — rudder/yaw full to one side (revealed throttle/rudder gimbal coupling — expected on this Mode 2 TX where throttle+rudder share one physical stick)
+7. `capture_idle2` — hands off again, confirmed throttle returned to the same idle value as `idle1`, validating the mapping
+
+Result: mapped rudder=byte0, pitch=byte1, roll=byte2, throttle=byte3:byte4 (big-endian 16-bit). Full detail and byte ranges recorded in `notes.md`. All of this is committed to git incrementally (see `git log`).
+
+Started aux-channel mapping (bytes 5-7, a multiplexed pair selected by a byte-7 flag) but **paused 2026-08-06**: user's Futaba T9CP transmitter battery went flat mid-session and is now charging. User provided the TX's switch inventory (A-H, mostly 2-position, C/E 3-position, H momentary) and noted all switches are currently in "UP" position — recorded in `notes.md`. No commands were run against the hardware after this point; nothing else changed.
+
+**To resume**: re-establish a clean "all switches UP" baseline capture once the TX is charged, then test each switch (A-H) individually the same way the stick axes were tested, to map each into the byte5-7 multiplex slots.

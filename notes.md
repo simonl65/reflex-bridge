@@ -53,9 +53,38 @@ not a protocol misunderstanding.
 | Aileron/Roll | byte2 | ~0x0d-0x0f | ~0xa6-0xa9 |
 | Throttle | byte3:byte4 (BE 16-bit) | ~0xba,0x96-99 (~47767) | ~0x8a,0x74-78 (~35446), decreasing |
 
+## Transmitter: Futaba T9CP, helicopter mode
+
+9-channel transmitter. Switch inventory:
+
+| Switch | Positions | Notes |
+|---|---|---|
+| A | 2 | |
+| B | 2 | |
+| C | 3 | |
+| D | 2 | |
+| E | 3 | |
+| F | 2 | |
+| G | 2 | |
+| H | 2 | momentary (non-latching) |
+
+As of 2026-08-06, all switches are in the "UP" position (some had been
+mistakenly in other positions during earlier testing — main-channel
+readings above were NOT affected since they only measured stick axes).
+Which switch corresponds to which logical aux channel (or which TX mixing
+output) is not yet known — TX-side switch assignment doesn't necessarily
+map 1:1 to raw channel bytes, since T9CP mixing can combine switches into
+channels in helicopter mode (e.g. gyro gain, governor, throttle hold,
+idle-up/pitch curve selection). Will need to test switches one at a time
+once the transmitter is charged and confirm against bytes 5-7.
+
 ## Aux channels (bytes 5-7, multiplexed)
 
-TBD — testing in progress.
+TBD — session paused 2026-08-06, transmitter battery flat and charging.
+Resume by testing each switch individually with `uv run capture.py <label> 3`,
+starting from the "all switches UP" baseline (should re-capture this as a
+clean baseline once charged, since earlier idle captures had switches in
+unknown/mixed positions).
 
 ## Byte mapping
 
