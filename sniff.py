@@ -33,9 +33,6 @@ def _ior(type_char, nr, size):
 
 
 HIDIOCGRDESCSIZE = _ior("H", 0x01, 4)
-HIDIOCGRDESC = _ior("H", 0x02, 4 + 4096)
-HIDIOCGRAWNAME_256 = (2 << 30) | (ord("H") << 8) | 0x04 | (256 << 16)
-
 
 def find_device():
     for uevent_path in glob.glob("/sys/class/hidraw/hidraw*/device/uevent"):
@@ -51,8 +48,9 @@ def dump_report_descriptor(fd):
     try:
         size_buf = fcntl.ioctl(fd, HIDIOCGRDESCSIZE, struct.pack("i", 0))
         (size,) = struct.unpack("i", size_buf)
-        buf = struct.pack("i", size) + b"\x00" * 4096
-        desc_buf = fcntl.ioctl(fd, HIDIOCGRDESC, buf)
+        hidiocgrdesc = _ior("H", 0x02, 4 + size)
+        buf = bytearray(struct.pack("i", size) + b"\x00" * size)
+        desc_buf = fcntl.ioctl(fd, hidiocgrdesc, buf)
         (rsize,) = struct.unpack("i", desc_buf[:4])
         report_bytes = desc_buf[4 : 4 + rsize]
         print(f"Report descriptor ({rsize} bytes):")
