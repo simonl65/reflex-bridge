@@ -153,6 +153,16 @@ high nibble. `byte7`'s low bits/exact value jitter a bit within a slot
     3-position switch output, not a smooth analog range)
   `byte5` within slot B stays ~0x00-0x01 constant — not meaningful data.
 
+UPDATE: live testing in Heli-X showed wrapping that traced back to slot A
+(CH6/byte5) specifically. Raw capture analysis of `capture_aileron_sweep.bin`
+proved it's a genuine hardware-level artifact, not a decode bug: byte5
+chaotically flaps between ~0 and 255 during rapid movement of AILERON (an
+unrelated axis) even while byte7's flag correctly indicates "slot A".
+CH7 (slot B/byte6) shows zero such artifacts across every sweep test.
+**Decision: byte5/CH6 is dropped from bridge.py entirely** — it's not
+fixable in software, and it's redundant anyway (TX-computed from
+throttle, not independently useful for a sim). Only CH7 (byte6) is used.
+
 Ruled out (no effect on either slot, at least at the settings tested):
 switch E (idle-up), Knob A (Hovering Pitch) at zero throttle, Knob B
 (CH8 — matches "CH8: Spare" on the receiver, likely genuinely unused).

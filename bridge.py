@@ -10,10 +10,15 @@ counter packed into byte3:
   byte1            elevator/pitch fine byte; coarse = byte3 bits[3:2] (x4)
   byte2            aileron/roll fine byte;   coarse = byte3 bits[1:0] (x1)
   byte4            throttle fine byte;       coarse = byte3 bits[5:4] (x16)
-  byte5/byte6      multiplexed aux pair, selected by byte7's high nibble:
-                     0x80/0xa0/0xb0 -> byte5 = CH6 pitch curve (tied to
-                       throttle, not independently useful for a sim)
-                     0xd0/0xe0/0xf0 -> byte6 = CH7 (switch C, 3-position)
+  byte6            CH7 (switch C, 3-position), valid only when byte7's
+                     high nibble is 0xd0/0xe0/0xf0 (multiplexed with CH6
+                     in byte5, which we don't use)
+
+CH6 pitch curve (byte5) is deliberately NOT exposed: it showed genuine
+chaotic garbage values during rapid movement of OTHER axes (verified via
+raw capture analysis, see notes.md) — looks like a hardware-level
+multiplexing artifact, not something fixable in software. It's also
+redundant for a sim (TX-computed from throttle) so dropping it is fine.
 
 Raw values are passed straight through as absolute axes; use Heli-X's own
 joystick calibration screen to set centers/endpoints/reversal, same as any
@@ -36,7 +41,6 @@ AXIS_ROLL = ecodes.ABS_X
 AXIS_PITCH = ecodes.ABS_Y
 AXIS_YAW = ecodes.ABS_RZ
 AXIS_THROTTLE = ecodes.ABS_THROTTLE
-AXIS_AUX_PITCH_CURVE = ecodes.ABS_RX
 AXIS_AUX_CH7 = ecodes.ABS_RY
 
 CAPABILITIES = {
@@ -45,7 +49,6 @@ CAPABILITIES = {
         (AXIS_PITCH, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
         (AXIS_YAW, AbsInfo(value=0, min=0, max=1023, fuzz=0, flat=0, resolution=0)),
         (AXIS_THROTTLE, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
-        (AXIS_AUX_PITCH_CURVE, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
         (AXIS_AUX_CH7, AbsInfo(value=0, min=0, max=255, fuzz=0, flat=0, resolution=0)),
     ]
 }
@@ -68,9 +71,7 @@ def decode(report, state):
     state[AXIS_ROLL] = (coarse & 0x3) << 8 | report[2]
 
     slot = report[7] & 0xF0
-    if slot in (0x80, 0xA0, 0xB0):
-        state[AXIS_AUX_PITCH_CURVE] = report[5]
-    elif slot in (0xD0, 0xE0, 0xF0):
+    if slot in (0xD0, 0xE0, 0xF0):
         state[AXIS_AUX_CH7] = report[6]
 
 
