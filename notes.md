@@ -28,6 +28,17 @@ Aileron/Roll = **byte2**, single byte, ~0-255 range: idle/center ~0x0d-0x0f
 Elevator/Pitch = **byte1**, single byte, idle/center ~0x0a-0x0c (10-12),
 full-forward ~0x72-0x75 (114-117). Increases moving forward (nose down).
 
+Rudder/Yaw = **byte0**, single byte, idle/center ~0x09-0x0c (9-12),
+full-side ~0x73-0x75 (115-117). Same scale as pitch.
+
+NOTE: during the yaw test, bytes 3-4 (throttle) read very differently
+(~0x1a,0xf5 -> combined ~6901) than the "mid" throttle test (~43541), even
+though only rudder was touched. Suspect Mode 2 gimbal: throttle (vertical)
+and rudder (horizontal) share one physical stick, and it may be spring-
+centered rather than ratcheted, so gripping it to move rudder also
+disturbed the throttle axis. Needs a clean hands-off retest to confirm
+throttle returns to a consistent idle value.
+
 ## Byte mapping
 
 | Channel | Byte offset | Width | Bit range | Idle/center | Min | Max | Notes |
