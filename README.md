@@ -48,6 +48,12 @@ Running the bridge:
 uv run bridge.py
 ```
 
+If that command doesn't work try:
+
+```bash
+uv run python -u bridge.py /dev/hidraw6
+```
+
 Leave it running in a terminal, then launch Heli-X and select "Reflex RC
 Bridge" as the controller. In Heli-X's Stick Configuration screen, sweep
 each stick through its full range, then assign functions (Aileron,
@@ -60,6 +66,36 @@ Exposed axes: aileron/roll, elevator/pitch, rudder/yaw, throttle, and one
 aux channel (CH7, driven by transmitter switch C). See `notes.md` for the
 full protocol writeup, including why a second aux channel (CH6) was
 deliberately left out (hardware-level glitch, not fixable in software).
+
+## Running automatically (systemd --user service)
+
+To have the bridge start automatically at login instead of running it
+manually each time:
+
+```sh
+mkdir -p ~/.config/systemd/user
+cp reflex-bridge.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now reflex-bridge.service
+```
+
+Check it's running and see logs:
+
+```sh
+systemctl --user status reflex-bridge.service
+journalctl --user -u reflex-bridge.service -f
+```
+
+It only runs while you're logged in (no lingering enabled), which is fine
+since Heli-X is a desktop app anyway. The bridge already retries opening
+the hidraw device if it's not present yet, so it's safe to enable this
+even before plugging the dongle in, and it'll pick it up whenever you do.
+
+To stop using it:
+
+```sh
+systemctl --user disable --now reflex-bridge.service
+```
 
 ## Diagnostics
 

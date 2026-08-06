@@ -68,11 +68,11 @@ elsewhere increments/decrements by a fixed step each time the fine byte
 wraps. All four coarse counters are packed into **byte3**:
 
 | Axis     | Fine byte | Coarse bits in byte3 | Coarse step (weight) |
-| -------- | --------- | --------------------- | --------------------- |
-| Rudder   | byte0     | bits[7:6]              | 64                    |
-| Throttle | byte4     | bits[5:4]              | 16                    |
-| Elevator | byte1     | bits[3:2]              | 4                     |
-| Aileron  | byte2     | bits[1:0]              | 1                     |
+| -------- | --------- | -------------------- | -------------------- |
+| Rudder   | byte0     | bits[7:6]            | 64                   |
+| Throttle | byte4     | bits[5:4]            | 16                   |
+| Elevator | byte1     | bits[3:2]            | 4                    |
+| Aileron  | byte2     | bits[1:0]            | 1                    |
 
 Combined 10-bit value per axis: `(coarse_2bit << 8) | fine_byte`, range
 0-1023. E.g. rudder = `((byte3 >> 6) & 0x3) << 8 | byte0`.
@@ -151,7 +151,7 @@ high nibble. `byte7`'s low bits/exact value jitter a bit within a slot
   - middle (pos 2): byte6 ~0x0d-0x0f
   - down (pos 3): byte6 ~0xfe-0xff (unevenly spaced — this is a raw
     3-position switch output, not a smooth analog range)
-  `byte5` within slot B stays ~0x00-0x01 constant — not meaningful data.
+    `byte5` within slot B stays ~0x00-0x01 constant — not meaningful data.
 
 UPDATE: live testing in Heli-X showed wrapping that traced back to slot A
 (CH6/byte5) specifically. Raw capture analysis of `capture_aileron_sweep.bin`

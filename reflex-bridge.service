@@ -1,0 +1,13 @@
+[Unit]
+Description=Reflex RC-controller Interface -> uinput joystick bridge
+After=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/simon/Documents/_ELECTRONICS/reflex-bridge
+ExecStart=/home/simon/.local/bin/uv run python -u bridge.py
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=default.target
