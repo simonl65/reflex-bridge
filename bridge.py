@@ -80,6 +80,8 @@ def run(path):
 
     state = {}
     last_sent = {}
+    last_emit = 0.0
+    min_interval = 1.0 / 60  # cap output rate to avoid overflowing joydev's event queue
     try:
         while True:
             try:
@@ -96,6 +98,12 @@ def run(path):
                     if len(report) < 8:
                         continue
                     decode(report, state)
+
+                    now = time.monotonic()
+                    if now - last_emit < min_interval:
+                        continue
+                    last_emit = now
+
                     changed = False
                     for axis, value in state.items():
                         if last_sent.get(axis) != value:
