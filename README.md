@@ -49,4 +49,23 @@ uv run bridge.py
 ```
 
 Leave it running in a terminal, then launch Heli-X and select "Reflex RC
-Bridge" as the controller.
+Bridge" as the controller. In Heli-X's Stick Configuration screen, sweep
+each stick through its full range, then assign functions (Aileron,
+Elevator, Rudder, Thrust) to the detected axes — do this fresh any time
+the bridge's axis set changes, since Heli-X caches calibration per axis
+layout in `files/controller/ReflexRCBridge.xml` and stale entries can
+cause visibly broken (wrapping) behavior.
+
+Exposed axes: aileron/roll, elevator/pitch, rudder/yaw, throttle, and one
+aux channel (CH7, driven by transmitter switch C). See `notes.md` for the
+full protocol writeup, including why a second aux channel (CH6) was
+deliberately left out (hardware-level glitch, not fixable in software).
+
+## Diagnostics
+
+- `uv run sniff.py` — dump raw hidraw reports for protocol work
+- `uv run capture.py <label> <seconds>` — capture + per-byte stats, saved
+  to `capture_<label>.bin`
+- `uv run jstest.py [/dev/input/jsN] [seconds]` — read the older joystick
+  API directly (useful if evdev looks clean but something downstream,
+  like Heli-X, doesn't)
