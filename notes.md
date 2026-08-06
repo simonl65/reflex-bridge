@@ -114,7 +114,8 @@ high nibble. `byte7`'s low bits/exact value jitter a bit within a slot
   This is **CH7**, controlled by **switch C** (3-position):
   - up (pos 1): byte6 ~0x00-0x01
   - middle (pos 2): byte6 ~0x0d-0x0f
-  - down (pos 3): TBD, testing in progress
+  - down (pos 3): byte6 ~0xfe-0xff (unevenly spaced — this is a raw
+    3-position switch output, not a smooth analog range)
   `byte5` within slot B stays ~0x00-0x01 constant — not meaningful data.
 
 Ruled out (no effect on either slot, at least at the settings tested):
