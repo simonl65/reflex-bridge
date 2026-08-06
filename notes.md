@@ -24,8 +24,9 @@ all three throttle tests) — likely other analog channels at rest.
 
 Aileron/Roll = **byte2**, single byte, ~0-255 range: idle/center ~0x0d-0x0f
 (13-15), full-right ~0xa6-0xa9 (166-169). Increases moving right.
-(byte1 showed a minor shift too during this test, 0x0a-0x0c -> 0x0c-0x0f —
-inconclusive, needs a dedicated pitch/yaw test to confirm if it's crosstalk.)
+
+Elevator/Pitch = **byte1**, single byte, idle/center ~0x0a-0x0c (10-12),
+full-forward ~0x72-0x75 (114-117). Increases moving forward (nose down).
 
 ## Byte mapping
 
