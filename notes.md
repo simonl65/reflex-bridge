@@ -39,6 +39,24 @@ centered rather than ratcheted, so gripping it to move rudder also
 disturbed the throttle axis. Needs a clean hands-off retest to confirm
 throttle returns to a consistent idle value.
 
+CONFIRMED: clean hands-off retest (idle2) shows byte3=0xba, byte4=0x96-0x9a,
+matching idle1 exactly. Throttle/rudder gimbal-coupling theory confirmed —
+mapping is correct, the yaw-test anomaly was expected physical coupling,
+not a protocol misunderstanding.
+
+## Main channel summary (confirmed)
+
+| Channel | Byte(s) | Idle | Full deflection |
+|---|---|---|---|
+| Rudder/Yaw | byte0 | ~0x09-0x0c | ~0x73-0x75 |
+| Elevator/Pitch | byte1 | ~0x0a-0x0c | ~0x72-0x75 |
+| Aileron/Roll | byte2 | ~0x0d-0x0f | ~0xa6-0xa9 |
+| Throttle | byte3:byte4 (BE 16-bit) | ~0xba,0x96-99 (~47767) | ~0x8a,0x74-78 (~35446), decreasing |
+
+## Aux channels (bytes 5-7, multiplexed)
+
+TBD — testing in progress.
+
 ## Byte mapping
 
 | Channel | Byte offset | Width | Bit range | Idle/center | Min | Max | Notes |
