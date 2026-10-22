@@ -1,6 +1,8 @@
 [Unit]
 Description=Reflex RC-controller Interface -> uinput joystick bridge
-After=graphical-session.target
+# Run only while the controller is plugged in (alias set by 99-reflex-rc.rules)
+BindsTo=dev-reflexrc.device
+After=graphical-session.target dev-reflexrc.device
 
 [Service]
 Type=simple

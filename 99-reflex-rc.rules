@@ -1,7 +1,8 @@
 # Dipl.-Ing. Stefan Kunde Reflex RC-controller Interface (0b9b:4012)
 # Grants the plugdev group read/write access to the raw HID device so the
-# bridge script can run without root.
-SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0b9b", ATTRS{idProduct}=="4012", MODE="0660", GROUP="plugdev", TAG+="uaccess"
+# bridge script can run without root. Also exposes it to systemd as
+# dev-reflexrc.device and starts the user bridge service on plug-in.
+SUBSYSTEM=="hidraw", ATTRS{idVendor}=="0b9b", ATTRS{idProduct}=="4012", MODE="0660", GROUP="plugdev", TAG+="uaccess", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/reflexrc", ENV{SYSTEMD_USER_WANTS}="reflex-bridge.service"
 
 # /dev/uinput is needed to create the virtual joystick that Heli-X reads.
 KERNEL=="uinput", MODE="0660", GROUP="plugdev"
