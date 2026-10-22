@@ -69,7 +69,7 @@ systemctl --user status reflex-bridge.service
 journalctl --user -u reflex-bridge.service -f
 ```
 
-It only runs while you're logged in (no lingering enabled), which is fine since Heli-X is a desktop app anyway. The bridge already retries opening the hidraw device if it's not present yet, so it's safe to enable this even before plugging the dongle in, and it'll pick it up whenever you do.
+It only runs while you're logged in (no lingering enabled), which is fine since Heli-X is a desktop app anyway. The service is bound to the dongle (via the udev rule's `SYSTEMD_ALIAS`/`SYSTEMD_USER_WANTS`): it starts when you plug it in and stops when you unplug it, so nothing runs or retries while it's absent. This needs the current `99-reflex-rc.rules` installed (step 1).
 
 To stop using it:
 
